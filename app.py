@@ -12,6 +12,30 @@ def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
 
+@app.route("/attributes")
+def attributes():
+    conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
+
+    attribute_cursor = conn.cursor()
+    attribute_cursor.execute("select * from attribute")
+    attribute = attribute_cursor.fetchall()
+
+    attributeData = []
+    for i in attribute:
+        result = {}
+        result["id"] = i[0]
+        result["attribute"] = i[1]
+        result["attribute_eng"] = i[3]
+        attributeData.append(result)
+        
+    print(json.dumps(attributeData, ensure_ascii=False))
+        # return json.dumps(attributeData, ensure_ascii=False)
+
+    conn.commit()
+    attribute_cursor.close()
+    conn.close()
+    return json.dumps(attributeData,ensure_ascii=False)
+
 @app.route("/nodes")
 def nodes():
     conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')

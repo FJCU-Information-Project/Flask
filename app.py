@@ -1,33 +1,36 @@
-from flask import Flask, render_template
-import os
+from flask import Flask, render_template, request
+from flask_cors import CORS
+# import os
 import pymysql
 import json
 
 app = Flask(__name__)
-
-conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
-cursor = conn.cursor()
-cursor.execute("select * from node")
-row = cursor.fetchall()
-
-jsonData = []
-
-for i in row:
-    result = {}    # temp store one jsonObject
-    result["id"] = i[0]# 将row中的每个元素，追加到字典中。　
-    result["node"] = i[1]
-    jsonData.append(json.dumps(result,ensure_ascii=False))
-
-print(jsonData)
-
-conn.commit()
-cursor.close()
-conn.close()
+cors = CORS(app, resources={"/*": {"origins": "*"}})
 
 @app.route("/")
 def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
+
+@app.route("/nodes")
+def nodes():
+    conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
+    cursor = conn.cursor()
+    cursor.execute("select * from node")
+    row = cursor.fetchall()
+
+    jsonData = []
+
+    for i in row:
+        result = {}    # temp store one jsonObject
+        result["id"] = i[0]# 将row中的每个元素，追加到字典中。　
+        result["node"] = i[1]
+        jsonData.append(result)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return json.dumps(jsonData,ensure_ascii=False)
 
 @app.route("/sna_graph")
 def sna():

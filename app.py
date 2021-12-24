@@ -1,7 +1,20 @@
 from flask import Flask, render_template
 import os
+import pymysql
 
-app = Flask("__name__");
+app = Flask(__name__)
+
+conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
+cursor = conn.cursor()
+cursor.execute("select * from node")
+row = cursor.fetchall()
+
+for i in row:
+    print(i)
+
+conn.commit()
+cursor.close()
+conn.close()
 
 @app.route("/")
 def index():

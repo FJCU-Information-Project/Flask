@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 import os
 import pymysql
+import json
 
 app = Flask(__name__)
 
@@ -9,8 +10,15 @@ cursor = conn.cursor()
 cursor.execute("select * from node")
 row = cursor.fetchall()
 
+jsonData = []
+
 for i in row:
-    print(i)
+    result = {}    # temp store one jsonObject
+    result["id"] = i[0]# 将row中的每个元素，追加到字典中。　
+    result["node"] = i[1]
+    jsonData.append(json.dumps(result,ensure_ascii=False))
+
+print(jsonData)
 
 conn.commit()
 cursor.close()

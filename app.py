@@ -1,11 +1,14 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 # import os
 import pymysql
-import json
 
 app = Flask(__name__)
 cors = CORS(app, resources={"/*": {"origins": "*"}})
+
+
+conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
+cursor = conn.cursor()
 
 @app.route("/")
 def index():
@@ -14,11 +17,8 @@ def index():
 
 @app.route("/attributes")
 def attributes():
-    conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
-
-    attribute_cursor = conn.cursor()
-    attribute_cursor.execute("select * from attribute")
-    attribute = attribute_cursor.fetchall()
+    cursor.execute("select * from attribute")
+    attribute = cursor.fetchall()
 
     attributeData = []
     for i in attribute:
@@ -28,23 +28,16 @@ def attributes():
         result["attribute_eng"] = i[3]
         attributeData.append(result)
         
-    print(json.dumps(attributeData, ensure_ascii=False))
-        # return json.dumps(attributeData, ensure_ascii=False)
-
     conn.commit()
-    attribute_cursor.close()
-    conn.close()
-    return json.dumps(attributeData,ensure_ascii=False)
+    print(jsonify(attributeData))
+    return jsonify(attributeData)
 
 @app.route("/nodes")
 def nodes():
-    conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
-    cursor = conn.cursor()
     cursor.execute("select * from node")
     row = cursor.fetchall()
 
     jsonData = []
-
     for i in row:
         result = {}    # temp store one jsonObject
         result["id"] = i[0]# 将row中的每个元素，追加到字典中。　
@@ -52,9 +45,8 @@ def nodes():
         jsonData.append(result)
 
     conn.commit()
-    cursor.close()
-    conn.close()
-    return json.dumps(jsonData,ensure_ascii=False)
+    print(jsonify(jsonData))
+    return jsonify(jsonData)
 
 @app.route("/sna_graph")
 def sna():
@@ -71,6 +63,7 @@ def sna():
 
 
 if __name__ == "__main__":
+    app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
     app.run()

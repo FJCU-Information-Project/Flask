@@ -13,7 +13,7 @@ cursor = conn.cursor()
 @app.route("/")
 def index():
     name = request.args.get("name")
-    return render_template("index.html", name=name)
+    return render_template("snaRank10.html", name=name)
 
 @app.route("/attributes")
 def attributes():

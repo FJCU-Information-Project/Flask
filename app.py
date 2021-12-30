@@ -13,7 +13,7 @@ cursor = conn.cursor()
 @app.route("/")
 def index():
     name = request.args.get("name")
-    return render_template("snaRank10.html", name=name)
+    return render_template("index.html", name=name)
 
 @app.route("/attributes")
 def attributes():
@@ -50,7 +50,7 @@ def nodes():
 
 @app.route("/sna_graph")
 def sna():
-    return render_template("1113_test_1.html")
+    return render_template("snaRank10.html")
 
 # @app.route("/csv",method="post")
 # def csv():

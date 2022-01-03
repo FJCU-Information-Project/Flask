@@ -18,15 +18,23 @@ def index():
 @app.route("/attributes")
 def attributes():
     cursor.execute("select * from attribute")
-    attribute = cursor.fetchall()
+    attributes = cursor.fetchall()
 
     attributeData = []
-    for i in attribute:
-        result = {}
-        result["id"] = i[0]
-        result["attribute"] = i[1]
-        result["attribute_eng"] = i[3]
-        attributeData.append(result)
+    for i in attributes:
+        attribute = {}
+        attribute["value"] = i[0]
+        attribute["label"] = i[1]
+
+        cursor.execute("select * from node where attribute =" + str(i[0]))
+        nodes = cursor.fetchall()
+        attribute["children"] = []
+        for j in nodes:
+            node = {}
+            node["value"] = j[0]
+            node["label"] = j[1]
+            attribute["children"].append(node)
+        attributeData.append(attribute)
         
     conn.commit()
     print(jsonify(attributeData))

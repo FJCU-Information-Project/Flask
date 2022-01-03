@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
+import os
 # import os
 import pymysql
 
@@ -14,6 +15,14 @@ cursor = conn.cursor()
 def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
+
+@app.route("/receive")
+def receive():
+    node = request.args.get("node")
+    # node+=node
+    print(node)
+    os.system("")
+    return node
 
 @app.route("/attributes")
 def attributes():

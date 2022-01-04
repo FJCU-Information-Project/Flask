@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
@@ -64,9 +65,24 @@ def nodes():
     print(jsonify(jsonData))
     return jsonify(jsonData)
 
-@app.route("/sna_graph")
-def sna():
-    return render_template("snaRank10.html")
+@app.route("/sna_graph/<filename>")
+def sna_graph_f(filename):
+    print(filename)
+    return render_template(filename)
+
+@app.route("/sna_graph/<folder>/<paths>/<filenames>")
+def sna_graph_f_p_f(folder,paths,filenames):
+    print(folder)
+    print(paths)
+    print(filenames)
+    string = folder + "/" + paths + "/" + filenames
+    return render_template(string)
+
+if __name__ == "__main__":
+    app.config['JSON_AS_ASCII'] = False
+    app.debug = True
+    # 正式環境註解上面這行
+    app.run(host="0.0.0.0",port="5000")
 
 # @app.route("/csv",method="post")
 # def csv():
@@ -75,11 +91,3 @@ def sna():
 #     ret.status = "OK"
 #     ret.data = "data"
 #     return jsontify(ret)
-
-
-
-if __name__ == "__main__":
-    app.config['JSON_AS_ASCII'] = False
-    app.debug = True
-    # 正式環境註解上面這行
-    app.run()

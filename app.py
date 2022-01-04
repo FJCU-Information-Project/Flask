@@ -22,7 +22,7 @@ def receive():
     # node+=node
     print(node)
     os.system("E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_all.R "+node)
-    return node
+    return redirect('sna_graph/snaRank10.html')
 
 @app.route("/attributes")
 def attributes():

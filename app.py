@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
-# import os
 import pymysql
 
 app = Flask(__name__)
@@ -21,7 +20,7 @@ def receive():
     node = request.args.get("node")
     # node+=node
     print(node)
-    os.system("")
+    os.system("E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_all.R "+node)
     return node
 
 @app.route("/attributes")

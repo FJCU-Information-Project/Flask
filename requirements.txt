@@ -3,4 +3,3 @@ flask
 pymysql
 flask_cors
 pandas
-json

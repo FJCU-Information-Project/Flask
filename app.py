@@ -1,8 +1,10 @@
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 from flask_cors import CORS
 import os
 import pymysql
+import pandas as pd
+import json
 
 app = Flask(__name__)
 cors = CORS(app, resources={"/*": {"origins": "*"}})
@@ -20,8 +22,10 @@ def index():
 def receive():
     node = request.args.get("node")
     # node+=node
+    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\snaRank10.R " + node
+    res = os.system(command)
+    print(res)
     print(node)
-    os.system("E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_all.R "+node)
     return redirect('sna_graph/snaRank10.html')
 
 @app.route("/attributes")
@@ -78,16 +82,16 @@ def sna_graph_f_p_f(folder,paths,filenames):
     string = folder + "/" + paths + "/" + filenames
     return render_template(string)
 
+@app.route("/csv")
+def csv():
+    csv = pd.read_csv("rankTable.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
     app.run(host="0.0.0.0",port="5000")
 
-# @app.route("/csv",method="post")
-# def csv():
-#     max = 1
-#     os.system("e:/dsd/ds/Rscrippt.exe sna.R " + max)
-#     ret.status = "OK"
-#     ret.data = "data"
-#     return jsontify(ret)

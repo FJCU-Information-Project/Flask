@@ -2,3 +2,6 @@ gunicorn
 flask
 pymysql
 flask_cors
+os
+pandas
+json

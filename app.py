@@ -28,6 +28,44 @@ def receive():
     print(node)
     return redirect('sna_graph/snaRank10.html')
 
+@app.route("/closenessReceive")
+def closenessreceive():
+    node = request.args.get("node")
+    # node+=node
+    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_closeness.R " + node
+    res = os.system(command)
+    print(res)
+    print(node)
+    return redirect('sna_graph/closeness.html')
+
+@app.route("/degreeReceive")
+def degreereceive():
+    node = request.args.get("node")
+    # node+=node
+    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_degree.R " + node
+    res = os.system(command)
+    print(res)
+    print(node)
+    return redirect('sna_graph/degree.html')
+
+@app.route("/overallReceive")
+def overallreceive():
+    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_all.R "
+    res = os.system(command)
+    print(res)
+    return redirect('sna_graph/overall.html')
+
+@app.route("/factorRankReceive")
+def factorreceive():
+    node = request.args.get("node")
+    # node+=node
+    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\snaRank10.R " + node
+    res = os.system(command)
+    print(res)
+    print(node)
+    return redirect('sna_graph/snaRank10.html')
+
+
 @app.route("/attributes")
 def attributes():
     cursor.execute("select * from attribute")
@@ -82,9 +120,16 @@ def sna_graph_f_p_f(folder,paths,filenames):
     string = folder + "/" + paths + "/" + filenames
     return render_template(string)
 
-@app.route("/csv")
-def csv():
+@app.route("/factorRankcsv")
+def factorcsv():
     csv = pd.read_csv("rankTable.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
+@app.route("/degreecsv")
+def degreecsv():
+    csv = pd.read_csv("degree_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))

@@ -3,11 +3,19 @@ from flask import Flask, render_template, request, jsonify, redirect
 from flask_cors import CORS
 import os
 import pymysql
-import pandas as pd
+#import pandas as pd
 import json
 
 app = Flask(__name__)
 cors = CORS(app, resources={"/*": {"origins": "*"}})
+
+# Define Rscipt Path
+Rscript = "E:\\R-4.1.2\\bin\\Rscript.exe "
+#Rscript = "/usr/local/bin/Rscript "
+snaPath = ".." + os.sep + "sna" + os.sep
+# Define-------------
+print(Rscript)
+print(snaPath)
 
 
 conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
@@ -22,7 +30,7 @@ def index():
 def receive():
     node = request.args.get("node")
     # node+=node
-    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\snaRank10.R " + node
+    command = Rscript + snaPath + "snaRank10.R " + node
     res = os.system(command)
     print(res)
     print(node)
@@ -32,7 +40,7 @@ def receive():
 def closenessreceive():
     node = request.args.get("node")
     # node+=node
-    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_closeness.R " + node
+    command = Rscript + snaPath + "sna_closeness.R " + node
     res = os.system(command)
     print(res)
     print(node)
@@ -42,7 +50,7 @@ def closenessreceive():
 def degreereceive():
     node = request.args.get("node")
     # node+=node
-    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_degree.R " + node
+    command = Rscript + snaPath + "sna_degree.R " + node
     res = os.system(command)
     print(res)
     print(node)
@@ -50,7 +58,7 @@ def degreereceive():
 
 @app.route("/overallReceive")
 def overallreceive():
-    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\sna_all.R "
+    command = Rscript + snaPath + "sna_all.R "
     res = os.system(command)
     print(res)
     return redirect('sna_graph/overall.html')
@@ -59,7 +67,7 @@ def overallreceive():
 def factorreceive():
     node = request.args.get("node")
     # node+=node
-    command = "E:\\R-4.1.2\\bin\\Rscript.exe E:\\GitHub\\sna\\snaRank10.R " + node
+    command = Rscript + snaPath + "snaRank10.R " + node
     res = os.system(command)
     print(res)
     print(node)
@@ -138,5 +146,5 @@ if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
-    app.run(host="0.0.0.0",port="5000")
+    app.run(host="0.0.0.0",port="5001")
 

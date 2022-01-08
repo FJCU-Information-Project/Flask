@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, jsonify, redirect
 from flask_cors import CORS
 import os
 import pymysql
-#import pandas as pd
+import pandas as pd
 import json
 
 app = Flask(__name__)
@@ -41,6 +41,7 @@ def closenessreceive():
     node = request.args.get("node")
     # node+=node
     command = Rscript + snaPath + "sna_closeness.R " + node
+    print(command)
     res = os.system(command)
     print(res)
     print(node)
@@ -153,5 +154,5 @@ if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
-    app.run(host="0.0.0.0",port="5001")
+    app.run(host="0.0.0.0",port="5000")
 

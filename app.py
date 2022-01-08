@@ -142,6 +142,13 @@ def degreecsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
+@app.route("/closenesscsv")
+def closenesscsv():
+    csv = pd.read_csv("closeness_table.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True

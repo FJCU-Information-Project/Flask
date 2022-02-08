@@ -74,6 +74,30 @@ def factorreceive():
     print(node)
     return redirect('sna_graph/snaRank10.html')
 
+@app.route("/layerReceive")
+def layerreceive():
+    node = request.args.get("node")
+    # node+=node
+    csv_command = " python.exe " + snaPath + "layer.py " + node
+    graph_command = Rscript + snaPath + "sna_layer.R " + node
+    csv_res = os.system(csv_command)
+    graph_res = os.system(graph_command)
+    print(graph_command)
+    print(csv_res)
+    print(graph_res)
+    print(node)
+    return redirect('sna_graph/layer.html')
+
+@app.route("/resultReceive")
+def resultreceive():
+    node = request.args.get("node")
+    # node+=node
+    command = Rscript + snaPath + "sna_result.R " + node
+    res = os.system(command)
+    print(res)
+    print(node)
+    return redirect('sna_graph/result.html')
+
 
 @app.route("/attributes")
 def attributes():
@@ -145,6 +169,20 @@ def degreecsv():
 
 @app.route("/closenesscsv")
 def closenesscsv():
+    csv = pd.read_csv("closeness_table.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
+@app.route("/layercsv")
+def layercsv():
+    csv = pd.read_csv("layer.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
+@app.route("/resultcsv")
+def resultcsv():
     csv = pd.read_csv("closeness_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")

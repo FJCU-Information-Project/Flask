@@ -91,8 +91,9 @@ def layerreceive():
 @app.route("/resultReceive")
 def resultreceive():
     node = request.args.get("node")
+    rank = request.args.get("rank")
     # node+=node
-    command = Rscript + snaPath + "sna_result.R " + node
+    command = Rscript + snaPath + "sna_result.R " + node + " " + rank
     res = os.system(command)
     print(res)
     print(node)
@@ -123,6 +124,23 @@ def attributes():
     conn.commit()
     print(jsonify(attributeData))
     return jsonify(attributeData)
+
+@app.route("/resultAttributes")
+def resultattributes():
+    cursor.execute("SELECT * FROM trans.injury_level;")
+    resultAttributes = cursor.fetchall()
+
+    resultAttributeData = []
+    for i in resultAttributes:
+        resultAttribute = {}
+        resultAttribute["value"] = i[0]
+        resultAttribute["label"] = i[1]
+
+        resultAttributeData.append(resultAttribute)
+        
+    conn.commit()
+    print(jsonify(resultAttributeData))
+    return jsonify(resultAttributeData)
 
 @app.route("/nodes")
 def nodes():
@@ -183,7 +201,7 @@ def layercsv():
 
 @app.route("/resultcsv")
 def resultcsv():
-    csv = pd.read_csv("closeness_table.csv")
+    csv = pd.read_csv("result_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
@@ -192,5 +210,9 @@ if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
+    if conn:
+        print("djow")
+    else:
+        print("wuqyqw")
     app.run(host="0.0.0.0",port="5000")
 

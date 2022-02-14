@@ -169,7 +169,11 @@ def sna_graph_f_p_f(folder,paths,filenames):
     print(paths)
     print(filenames)
     string = folder + "/" + paths + "/" + filenames
-    return render_template(string)
+    try:
+        return render_template(string)
+    except:
+        return "File not exist"
+    
 
 @app.route("/factorRankcsv")
 def factorcsv():

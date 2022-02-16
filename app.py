@@ -7,10 +7,12 @@ import pandas as pd
 import json
 
 app = Flask(__name__)
-cors = CORS(app, resources={"/*": {"origins": "*"}})
+# CORS(app, resources={"/*": {"origins": "*"}})
+CORS(app)
 
 # Define Rscipt Path
 Rscript = "E:\\R-4.1.2\\bin\\Rscript.exe "
+#Rscript = "Rscript "
 #Rscript = "/usr/local/bin/Rscript "
 snaPath = ".." + os.sep + "sna" + os.sep
 # Define-------------
@@ -18,13 +20,16 @@ print(Rscript)
 print(snaPath)
 
 
-conn = pymysql.connect(host='140.136.155.121', port=50306, user='root', passwd='IM39project', db='trans')
+conn = pymysql.connect(host='140.136.155.121', port=50306,
+                       user='root', passwd='IM39project', db='trans')
 cursor = conn.cursor()
+
 
 @app.route("/")
 def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
+
 
 @app.route("/receive")
 def receive():
@@ -35,6 +40,7 @@ def receive():
     print(res)
     print(node)
     return redirect('sna_graph/snaRank10.html')
+
 
 @app.route("/closenessReceive")
 def closenessreceive():
@@ -47,6 +53,7 @@ def closenessreceive():
     print(node)
     return redirect('sna_graph/closeness.html')
 
+
 @app.route("/degreeReceive")
 def degreereceive():
     node = request.args.get("node")
@@ -57,12 +64,14 @@ def degreereceive():
     print(node)
     return redirect('sna_graph/degree.html')
 
+
 @app.route("/overallReceive")
 def overallreceive():
     command = Rscript + snaPath + "sna_all.R "
     res = os.system(command)
     print(res)
     return redirect('sna_graph/overall.html')
+
 
 @app.route("/factorRankReceive")
 def factorreceive():
@@ -74,11 +83,12 @@ def factorreceive():
     print(node)
     return redirect('sna_graph/snaRank10.html')
 
+
 @app.route("/layerReceive")
 def layerreceive():
     node = request.args.get("node")
     # node+=node
-    csv_command = " python.exe " + snaPath + "layer.py " + node
+    csv_command = " python3 " + snaPath + "layer.py " + node
     graph_command = Rscript + snaPath + "sna_layer.R " + node
     csv_res = os.system(csv_command)
     graph_res = os.system(graph_command)
@@ -88,14 +98,15 @@ def layerreceive():
     print(node)
     return redirect('sna_graph/layer.html')
 
+
 @app.route("/resultReceive")
 def resultreceive():
     node = request.args.get("node")
     rank = request.args.get("rank")
     # node+=node
-    command = Rscript + snaPath + "sna_result.R " + node + " " + rank
-    res = os.system(command)
-    print(res)
+    #command = Rscript + snaPath + "sna_result.R " + node + " " + rank
+    #res = os.system(command)
+    # print(res)
     print(node)
     return redirect('sna_graph/result.html')
 
@@ -120,10 +131,11 @@ def attributes():
             node["label"] = j[1]
             attribute["children"].append(node)
         attributeData.append(attribute)
-        
+
     conn.commit()
     print(jsonify(attributeData))
     return jsonify(attributeData)
+
 
 @app.route("/resultAttributes")
 def resultattributes():
@@ -137,10 +149,11 @@ def resultattributes():
         resultAttribute["label"] = i[1]
 
         resultAttributeData.append(resultAttribute)
-        
+
     conn.commit()
     print(jsonify(resultAttributeData))
     return jsonify(resultAttributeData)
+
 
 @app.route("/nodes")
 def nodes():
@@ -150,7 +163,7 @@ def nodes():
     jsonData = []
     for i in row:
         result = {}    # temp store one jsonObject
-        result["id"] = i[0]# 将row中的每个元素，追加到字典中。　
+        result["id"] = i[0]  # 将row中的每个元素，追加到字典中。　
         result["node"] = i[1]
         jsonData.append(result)
 
@@ -158,13 +171,15 @@ def nodes():
     print(jsonify(jsonData))
     return jsonify(jsonData)
 
+
 @app.route("/sna_graph/<filename>")
 def sna_graph_f(filename):
     print(filename)
     return render_template(filename)
 
+
 @app.route("/sna_graph/<folder>/<paths>/<filenames>")
-def sna_graph_f_p_f(folder,paths,filenames):
+def sna_graph_f_p_f(folder, paths, filenames):
     print(folder)
     print(paths)
     print(filenames)
@@ -173,7 +188,7 @@ def sna_graph_f_p_f(folder,paths,filenames):
         return render_template(string)
     except:
         return "File not exist"
-    
+
 
 @app.route("/factorRankcsv")
 def factorcsv():
@@ -182,12 +197,14 @@ def factorcsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
+
 @app.route("/degreecsv")
 def degreecsv():
     csv = pd.read_csv("degree_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
+
 
 @app.route("/closenesscsv")
 def closenesscsv():
@@ -196,6 +213,7 @@ def closenesscsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
+
 @app.route("/layercsv")
 def layercsv():
     csv = pd.read_csv("layer.csv")
@@ -203,12 +221,14 @@ def layercsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
+
 @app.route("/resultcsv")
 def resultcsv():
     csv = pd.read_csv("result_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
+
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
@@ -218,5 +238,4 @@ if __name__ == "__main__":
         print("djow")
     else:
         print("wuqyqw")
-    app.run(host="0.0.0.0",port="5000")
-
+    app.run(host="0.0.0.0", port="5000")

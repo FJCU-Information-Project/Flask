@@ -110,6 +110,15 @@ def resultreceive():
     print(node)
     return redirect('sna_graph/result.html')
 
+@app.route("/isolationReceive")
+def isolationreceive():
+    node = request.args.get("node")
+    # node+=node
+    command = Rscript + snaPath + "sna_isolation.R " + node
+    res = os.system(command)
+    # print(res)
+    return redirect('sna_graph/isolation.html')
+
 
 @app.route("/attributes")
 def attributes():
@@ -217,6 +226,13 @@ def closenesscsv():
 @app.route("/layercsv")
 def layercsv():
     csv = pd.read_csv("layer.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
+
+@app.route("/isolationcsv")
+def isolationcsv():
+    csv = pd.read_csv("isolation_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))

@@ -88,8 +88,8 @@ def factorreceive():
 def layerreceive():
     node = request.args.get("node")
     # node+=node
-    csv_command = " python3 " + snaPath + "layer.py " + node
-    graph_command = Rscript + snaPath + "sna_layer.R " + node
+    csv_command = " python " + snaPath + "layer.py " + str(node)
+    graph_command = Rscript + snaPath + "sna_layer.R " + str(node)
     csv_res = os.system(csv_command)
     graph_res = os.system(graph_command)
     print(graph_command)
@@ -104,9 +104,9 @@ def resultreceive():
     node = request.args.get("node")
     rank = request.args.get("rank")
     # node+=node
-    #command = Rscript + snaPath + "sna_result.R " + node + " " + rank
-    #res = os.system(command)
-    # print(res)
+    command = Rscript + snaPath + "sna_result.R " + node + " " + rank
+    res = os.system(command)
+    print(res)
     print(node)
     return redirect('sna_graph/result.html')
 
@@ -225,7 +225,7 @@ def closenesscsv():
 
 @app.route("/layercsv")
 def layercsv():
-    csv = pd.read_csv("layer.csv")
+    csv = pd.read_csv("layer_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
@@ -254,4 +254,4 @@ if __name__ == "__main__":
         print("djow")
     else:
         print("wuqyqw")
-    app.run(host="0.0.0.0", port="5000")
+    app.run(host="0.0.0.0", port="50000")

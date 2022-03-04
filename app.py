@@ -1,12 +1,19 @@
 
-from flask import Flask, render_template, request, jsonify, redirect
+from email.policy import HTTP
+from flask import Flask, render_template, request, jsonify, redirect, template_rendered
 from flask_cors import CORS
 import os
 import pymysql
 import pandas as pd
 import json
+from flask_restful import Api, Resource
+from flask_httpauth import HTTPBasicAuth
+
+
 
 app = Flask(__name__)
+auth = HTTPBasicAuth()
+api = Api(app)
 # CORS(app, resources={"/*": {"origins": "*"}})
 CORS(app)
 
@@ -245,6 +252,22 @@ def resultcsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
+users = {
+    "username":"password"
+}
+
+@auth.verify_password
+def verify_password(username, password):
+    if not (username, password):
+        return False
+    return users.get(username) == "password"
+
+class authen(Resource):
+    @auth.login_required
+    def get(self):
+        return "welcome"
+
+api.add_resource(authen, "/auth")
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
@@ -254,4 +277,4 @@ if __name__ == "__main__":
         print("djow")
     else:
         print("wuqyqw")
-    app.run(host="0.0.0.0", port="50000")
+    app.run(host="0.0.0.0", port="5000")

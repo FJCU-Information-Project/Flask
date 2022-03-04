@@ -3,3 +3,5 @@ flask
 pymysql
 flask_cors
 pandas
+flask_restful
+flask_httpauth

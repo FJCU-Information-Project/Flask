@@ -9,7 +9,10 @@ import json
 from flask_restful import Api, Resource
 from flask_httpauth import HTTPBasicAuth
 
-
+tokens = [
+    "12345678",
+    "ABCDEFGH"
+]
 
 app = Flask(__name__)
 auth = HTTPBasicAuth()
@@ -252,29 +255,19 @@ def resultcsv():
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
 
-users = {
-    "username":"password"
-}
-
-@auth.verify_password
-def verify_password(username, password):
-    if not (username, password):
-        return False
-    return users.get(username) == "password"
-
-class authen(Resource):
-    @auth.login_required
-    def get(self):
-        return "welcome"
-
-api.add_resource(authen, "/auth")
+@app.route("/auth", methods=['POST'])
+def auth():
+    data = request.get_json()
+    res = {"valid": None}
+    res["valid"] = True if data["token"] in tokens else False
+    return jsonify(res)
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.debug = True
     # 正式環境註解上面這行
     if conn:
-        print("djow")
+        print("conneted")
     else:
-        print("wuqyqw")
-    app.run(host="0.0.0.0", port="5000")
+        print("Connect ERROR")
+    app.run(host="0.0.0.0", port="50000")

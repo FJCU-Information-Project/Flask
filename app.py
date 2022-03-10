@@ -14,7 +14,10 @@ tokens = [
     "ABCDEFGH"
 ]
 
-app = Flask(__name__)
+app = Flask(__name__
+            ,static_url_path="/trans"
+            ,static_folder = "../trans/docs")
+            # 用來設定說
 auth = HTTPBasicAuth()
 api = Api(app)
 # CORS(app, resources={"/*": {"origins": "*"}})
@@ -26,8 +29,8 @@ Rscript = "E:\\R-4.1.2\\bin\\Rscript.exe "
 #Rscript = "/usr/local/bin/Rscript "
 snaPath = ".." + os.sep + "sna" + os.sep
 # Define-------------
-print(Rscript)
-print(snaPath)
+print("Rscript Path:",Rscript)
+print("sna Path:",snaPath)
 
 
 conn = pymysql.connect(host='140.136.155.121', port=50306,
@@ -86,7 +89,7 @@ def overallreceive():
 @app.route("/factorRankReceive")
 def factorreceive():
     node = request.args.get("node")
-    # node+=node
+    # node += node
     command = Rscript + snaPath + "snaRank10.R " + node
     res = os.system(command)
     print(res)

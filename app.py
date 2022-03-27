@@ -8,6 +8,7 @@ import json
 from flask_restful import Api, Resource
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.utils import secure_filename
+#import database.rank
 
 tokens = [
     "12345678",
@@ -301,34 +302,30 @@ def uploadDatasets():
 
 @app.route("/uploadDatasetInfo")
 def uploadDatasetInfo():
-    all_dataset = []
+    # all_dataset = []
 
-    dataset = {
-        "datasetName": "",
-        "datasetUnit": "",
-        "datasetPeriod": "",
-        "datasetNote": "",
-        "datasetPublic": ""
-    }
-    datasetInfo = ["datasetName", "datasetUnit", "datasetPeriod", "datasetNote", "datasetPublic"]
+    # dataset = {
+    #     "datasetName": "",
+    #     "datasetUnit": "",
+    #     "datasetPeriod": "",
+    #     "datasetNote": "",
+    #     "datasetPublic": ""
+    # }
+    # datasetInfo = ["datasetName", "datasetUnit", "datasetPeriod", "datasetNote", "datasetPublic"]
 
-    for i in range(len(datasetInfo)):
-        dataset[datasetInfo[i]] = request.form.get(datasetInfo[i])
+    # for i in range(len(datasetInfo)):
+    #     dataset[datasetInfo[i]] = request.form.get(datasetInfo[i])
 
-    #for i in dataset:
-    #    cursor.execute("INSERT INTO dataset VALUES ()")
-    
+    import database.correctProcess.createTables2
 
-    all_dataset.append(dataset)
-    return jsonify(all_dataset)
+    # all_dataset.append(dataset)
+    # return jsonify(all_dataset)
+    return "sucess"
 
 @app.route("/addDataset")
 def addDataset():
-    # import ../database/correct process/crate table.py
-    return "Null"
-    # 先不要把syntax用壞
-    # 我要修小羊的東西
-    # 喔喔喔好喔
+    import database.correctProcess.createTables
+    return "sucess"
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False

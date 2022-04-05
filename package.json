@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@element-plus/icons-vue": "^1.1.4",
+    "mdb-vue-ui-kit": "^1.11.0"
+  }
+}

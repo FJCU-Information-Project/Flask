@@ -1,51 +1,44 @@
-from email.policy import HTTP
-from flask import Flask, render_template, request, jsonify, redirect, template_rendered
+from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_cors import CORS
-import os
-import pymysql
-import pandas as pd
-import json
-from flask_restful import Api, Resource
-from flask_httpauth import HTTPBasicAuth
+from email.policy import HTTP
 from werkzeug.utils import secure_filename
-#import database.rank
+import pymysql
+from mysql.connector import Error
 
-tokens = [
-    "12345678",
-    "ABCDEFGH"
-]
+from app_receieves import receieves
+from app_csv import csv_apis
+from app_db import db_methods
+#import database.rank
 
 app = Flask(__name__
             ,static_url_path="/trans"
             ,static_folder = "../trans/docs")
             # 用來設定說
-            
-auth = HTTPBasicAuth()
-api = Api(app)
+app.register_blueprint(receieves)
+app.register_blueprint(csv_apis)
+app.register_blueprint(db_methods)
+
 # CORS(app, resources={"/*": {"origins": "*"}})
 CORS(app)
 
+# Constant----
+#USER_ID = "304u39481-20"
+#USER_ID = "5678"
+#USER_ID = "9840-menqwk"
+USER_ID = "3654"
+#DATASET_ID = 1
+DATASET_ID = 1
 UPLOAD_FOLDER = "../temp"
-ALLOWED_EXTENSIONS = set(['csv'])
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-
-# Define Rscipt Path
-Rscript = "E:\\R-4.1.2\\bin\\Rscript.exe "
-#Rscript = "Rscript "
-#Rscript = "/usr/local/bin/Rscript "
-snaPath = ".." + os.sep + "sna" + os.sep
-# Define-------------
-print("Rscript Path:",Rscript)
-print("sna Path:",snaPath)
+tokens = [
+    "12345678",
+    "ABCDEFGH"
+]
+# ------------
 
 conn = pymysql.connect(host='140.136.155.121', port=50306,
-                    user='root', passwd='IM39project', db='trans')
+                    user='root', passwd='IM39project')
 cursor = conn.cursor()
+
 
 
 @app.route("/")
@@ -53,136 +46,65 @@ def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
 
-
-@app.route("/receive")
-def receive():
-    node = request.args.get("node")
-    command = Rscript + snaPath + "snaRank10.R " + node
-    res = os.system(command)
-    print(res)
-    print(node)
-    return redirect('sna_graph/snaRank10.html')
-
-
-@app.route("/closenessReceive")
-def closenessreceive():
-    node = request.args.get("node")
-    command = Rscript + snaPath + "sna_closeness.R " + node
-    print(command)
-    res = os.system(command)
-    print(res)
-    print(node)
-    return redirect('sna_graph/closeness.html')
-
-
-@app.route("/degreeReceive")
-def degreereceive():
-    node = request.args.get("node")
-    command = Rscript + snaPath + "sna_degree.R " + node
-    res = os.system(command)
-    print(res)
-    print(node)
-    return redirect('sna_graph/degree.html')
-
-
-@app.route("/overallReceive")
-def overallreceive():
-    command = Rscript + snaPath + "sna_all.R "
-    res = os.system(command)
-    print(res)
-    return redirect('sna_graph/overall.html')
-
-
-@app.route("/factorRankReceive")
-def factorreceive():
-    node = request.args.get("node")
-    command = Rscript + snaPath + "snaRank10.R " + node
-    res = os.system(command)
-    print(res)
-    print(node)
-    return redirect('sna_graph/snaRank10.html')
-
-
-@app.route("/layerReceive")
-def layerreceive():
-    node = request.args.get("node")
-    print("Layer Receive :", node)
-    csv_command = " python " + snaPath + "layer.py " + str(node)
-    print("csv_command:",csv_command)
-    graph_command = Rscript + snaPath + "sna_layer.R " + str(node)
-    print("graph_command:",graph_command)
-    csv_res = os.system(csv_command)
-    print("csv_res:",csv_res)
-    graph_res = os.system(graph_command)
-    print("graph_res:",graph_res)
-    return redirect('sna_graph/layer.html')
-
-
-@app.route("/resultReceive")
-def resultreceive():
-    node = request.args.get("node")
-    rank = request.args.get("rank")
-    command = Rscript + snaPath + "sna_result.R " + node + " " + rank
-    res = os.system(command)
-    print(res)
-    print(node)
-    return redirect('sna_graph/result.html')
-
-@app.route("/isolationReceive")
-def isolationreceive():
-    node = request.args.get("node")
-    command = Rscript + snaPath + "sna_isolation.R " + node
-    res = os.system(command)
-    return redirect('sna_graph/isolation.html')
-
-
 @app.route("/attributes")
 def attributes():
-    cursor.execute("select * from attribute")
+    sql = "SELECT * FROM `" + USER_ID + "`.`attribute` WHERE dataset = " + str(DATASET_ID)
+    print(sql)
+    cursor.execute(sql)
     attributes = cursor.fetchall()
 
     attributeData = []
     for i in attributes:
         attribute = {}
-        attribute["value"] = i[0]
-        attribute["label"] = i[1]
-
-        cursor.execute("select * from node where attribute =" + str(i[0]))
+        attribute["value"] = i[1]
+        attribute["label"] = i[2]
+        sql = "select * from `" + USER_ID + "`.`node` where attribute = " + str(i[1])
+        print(sql)
+        cursor.execute(sql)
         nodes = cursor.fetchall()
         attribute["children"] = []
         for j in nodes:
             node = {}
-            node["value"] = j[0]
-            node["label"] = j[1]
+            node["value"] = j[2]
+            node["label"] = j[4]
             attribute["children"].append(node)
-        attributeData.append(attribute)
 
+        attributeData.append(attribute)
+    # print(nodes)
     conn.commit()
-    print(jsonify(attributeData))
+    # print(jsonify(attributeData))
     return jsonify(attributeData)
 
 
 @app.route("/resultAttributes")
 def resultattributes():
-    cursor.execute("SELECT * FROM trans.injury_level;")
+    cursor.execute("SELECT * FROM `"+USER_ID+"`.`result_attribute`")
     resultAttributes = cursor.fetchall()
 
     resultAttributeData = []
     for i in resultAttributes:
         resultAttribute = {}
-        resultAttribute["value"] = i[0]
-        resultAttribute["label"] = i[1]
+        resultAttribute["value"] = i[1]
+        resultAttribute["label"] = i[2]
+
+        cursor.execute("select * from `"+USER_ID+"`.`result` where attribute =" + str(i[1]))
+        results = cursor.fetchall()
+        resultAttribute["children"] = []
+        for j in results:
+            result = {}
+            result["value"] = j[2]
+            result["label"] = j[4]
+            resultAttribute["children"].append(result)
 
         resultAttributeData.append(resultAttribute)
-
+    print(resultAttribute)
     conn.commit()
     print(jsonify(resultAttributeData))
     return jsonify(resultAttributeData)
 
-
 @app.route("/nodes")
 def nodes():
-    cursor.execute("select * from node")
+    cursor.execute("select * from `" + USER_ID + "`.`node`")
     row = cursor.fetchall()
 
     jsonData = []
@@ -196,12 +118,10 @@ def nodes():
     print(jsonify(jsonData))
     return jsonify(jsonData)
 
-
 @app.route("/sna_graph/<filename>")
 def sna_graph_f(filename):
     print(filename)
     return render_template(filename)
-
 
 @app.route("/sna_graph/<folder>/<paths>/<filenames>")
 def sna_graph_f_p_f(folder, paths, filenames):
@@ -214,118 +134,96 @@ def sna_graph_f_p_f(folder, paths, filenames):
     except:
         return "File not exist"
 
-
-@app.route("/factorRankcsv")
-def factorcsv():
-    csv = pd.read_csv("rankTable.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
-
-@app.route("/degreecsv")
-def degreecsv():
-    csv = pd.read_csv("degree_table.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
-
-@app.route("/closenesscsv")
-def closenesscsv():
-    csv = pd.read_csv("closeness_table.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
-
-@app.route("/layercsv")
-def layercsv():
-    csv = pd.read_csv("layer_table.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
-@app.route("/isolationcsv")
-def isolationcsv():
-    csv = pd.read_csv("isolation_table.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
-
-@app.route("/resultcsv")
-def resultcsv():
-    csv = pd.read_csv("result_table.csv")
-    print(csv)
-    jdata = csv.to_json(orient="records")
-    return jsonify(json.loads(jdata))
-
 @app.route("/auth", methods=['POST'])
 def auth():
-    data = request.get_json()
+    global USER_ID
+    conn.ping(reconnect=True)
+    auth_cursor = conn.cursor()
     res = {"valid": None}
-    res["valid"] = True if data["token"] in tokens else False
+    data = request.get_json()
+    sql = "select * from `trans`.`user` where id =" + str(data["token"])
+    print(sql)
+    auth_cursor.execute(sql)
+    conn.commit()
+    user = list(auth_cursor.fetchall())
+    print(user)
+
+    if user:
+        res["valid"] = True
+        USER_ID = data["token"]
+    else:
+        res["valid"] = False
+    # data = request.get_json()
+    # res = {"valid": None}
+    # res["valid"] = True if data["token"] in tokens else False
     return jsonify(res)
+
+
 
 @app.route("/token")
 def token():
-    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?7EEB108A1D38E961642A6D6AA362C14F03BC"
+    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?652E49F69A89C03E0C23E37F0DFF6BF870D7"
     return "<a href='"+link+"'>"+link+"</a>"
 
-@app.route("/uploadDatasets", methods=['POST'])
-def uploadDatasets():
-    allRet = []
-    nameLists = ["nodeFileName","attributeFileName","resultFileName","resultAttributeFileName"]
+@app.route("/exampleTable")
+def exampleTable():
+    conn.ping(reconnect=True)
+    sql = "select * from `trans`.`user`"
+    print(sql)
+    cursor.execute(sql)
+    users = cursor.fetchall()
     
-    for nameOfUplaodFile in nameLists:
-        ret = {
-            "status": "No File"
-        }
-        try:
-            uploadFile = request.files[nameOfUplaodFile]
-        except:
-            allRet.append(ret)
-            continue
-        if uploadFile and allowed_file(uploadFile.filename):
-            print("File name:",uploadFile.filename)
-            ret["filename"] = uploadFile.filename
-            uploadFile.save(os.path.join(app.config['UPLOAD_FOLDER'],secure_filename(uploadFile.filename)))
-            print("Upload File")
-            ret["status"] = "Upload"
-        else:
-            print("No file and format error")
-            ret["status"] = "No file and format error"
-        allRet.append(ret)
-    
-    return jsonify(allRet)
+    exampleDatasets = []
+    for user in users:
+        sql = "select * from `" + str(user[0]) + "`.`dataset` WHERE is_public = 1"
+        cursor.execute(sql)
+        userDatasets = cursor.fetchall()
+        userDatasets = list(userDatasets)
+        
+        for userDataset in userDatasets:
+            exampleTablesTags = [
+                "datasetName",
+                "datasetUnit",
+                "datasetStart",
+                "datasetEnd",
+                "datasetNote",
+                "datasetPublic",
+            ]
+            exampleTableData = {}
+            for i in range(len(exampleTablesTags)):
+                exampleTableData[exampleTablesTags[i]] = userDataset[i+1]
+            exampleDatasets.append(exampleTableData)
 
-@app.route("/uploadDatasetInfo")
-def uploadDatasetInfo():
-    # all_dataset = []
+    conn.commit()
+    print("exampleTable")
+    return jsonify(exampleDatasets)
 
-    # dataset = {
-    #     "datasetName": "",
-    #     "datasetUnit": "",
-    #     "datasetPeriod": "",
-    #     "datasetNote": "",
-    #     "datasetPublic": ""
-    # }
-    # datasetInfo = ["datasetName", "datasetUnit", "datasetPeriod", "datasetNote", "datasetPublic"]
+@app.route("/customizeTable")
+def customizeTable():
+    conn.ping(reconnect=True)
+    sql = "select * from `" + USER_ID + "`.`dataset`"
+    try:
+        cursor.execute(sql)
+    except Error:
+        print(Error)
+    customizeDatas = list(cursor.fetchall())
 
-    # for i in range(len(datasetInfo)):
-    #     dataset[datasetInfo[i]] = request.form.get(datasetInfo[i])
+    customizeDataset = []
+    for customizeData in customizeDatas:
+        customizeTableTags = [
+            "datasetName",
+            "datasetUnit",
+            "datasetStart",
+            "datasetEnd",
+            "datasetNote",
+            "datasetPublic",
+        ]
+        customizeTableDatas = {}
+        for i in range(len(customizeTableTags)):
+            customizeTableDatas[customizeTableTags[i]]= customizeData[i+1]
+        customizeDataset.append(customizeTableDatas)
 
-    import database.correctProcess.createTables2
-
-    # all_dataset.append(dataset)
-    # return jsonify(all_dataset)
-    return "sucess"
-
-@app.route("/addDataset")
-def addDataset():
-    import database.correctProcess.createTables
-    return "sucess"
+    return jsonify(customizeDataset)
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False

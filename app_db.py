@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_cors import CORS
 import threading
 from werkzeug.utils import secure_filename
 import os
@@ -6,12 +7,19 @@ import threading
 
 db_methods = Blueprint('db_methods', __name__)
 
+
+CORS(db_methods, resources={"/*": {
+    "origins": "*",
+    "methods": "*",
+    "headers": "*",
+}})
+
 # user_id = "304u39481-20"
 # dataset_id = 1
 # threads = []
 
 #USER_ID = "304u39481-20"
-USER_ID = "9840-menqwk"
+#USER_ID = "9840-menqwk"
 DATASET_ID = 1
 ALLOWED_EXTENSIONS = set(['csv'])
 UPLOAD_FOLDER = "../temp"
@@ -30,7 +38,6 @@ def uploadDatasets():
         }
         try:
             uploadFile = request.files[nameOfUploadFile]
-            print("ewifoefniwef")
         except:
             allRet.append(ret)
             continue
@@ -47,31 +54,33 @@ def uploadDatasets():
     
     return jsonify(allRet)
 
-@db_methods.route("/uploadFile", methods = ['POST'])
+@db_methods.route("/uploadFile",methods=['OPTIONS','POST'])
 def uploadFile():
-    all_ret = []
+    if request.method == 'POST':
+        all_ret = []
 
-    ret = {
-        "status" : "No file"
-    }
+        ret = {
+            "status" : "No file"
+        }
 
-    try:
-        datasetFiles = request.files['caseFile']
-    except:
+        try:
+            datasetFiles = request.files['caseFile']
+        except:
+            all_ret.append(ret)
+
+        if datasetFiles and allowed_file(datasetFiles.filename):
+            print("File name:",datasetFiles.filename)
+            ret["filename"] = datasetFiles.filename
+            datasetFiles.save(os.path.join(UPLOAD_FOLDER,secure_filename(datasetFiles.filename)))
+            print("Upload File")
+            ret["status"] = "Upload"
+        else:
+            print("No flie and format error")
+            ret["status"] = "No file and format error"
         all_ret.append(ret)
-
-    if datasetFiles and allowed_file(datasetFiles.filename):
-        print("File name:",datasetFiles.filename)
-        ret["filename"] = datasetFiles.filename
-        datasetFiles.save(os.path.join(UPLOAD_FOLDER,secure_filename(datasetFiles.filename)))
-        print("Upload File")
-        ret["status"] = "Upload"
-    else:
-        print("No flie and format error")
-        ret["status"] = "No file and format error"
-    all_ret.append(ret)
-    
-    return jsonify(all_ret)
+        
+        return jsonify(all_ret)
+    return "Not POST"
 
 @db_methods.route("/deleteDataset")
 def deleteDataset():

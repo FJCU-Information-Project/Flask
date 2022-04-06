@@ -162,7 +162,7 @@ def auth():
 
 @app.route("/token")
 def token():
-    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?652E49F69A89C03E0C23E37F0DFF6BF870D7"
+    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?CDFC380F8E1D911410EC7EF63BE355C2EDAE"
     return "<a href='"+link+"'>"+link+"</a>"
 
 @app.route("/exampleTable")

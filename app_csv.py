@@ -31,7 +31,7 @@ def closenesscsv():
 
 @csv_apis.route("/layercsv")
 def layercsv():
-    csv = pd.read_csv("layer_table.csv")
+    csv = pd.read_csv("layertable.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))

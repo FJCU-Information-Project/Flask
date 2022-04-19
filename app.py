@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, Blueprint
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from email.policy import HTTP
 from werkzeug.utils import secure_filename
 import pymysql
@@ -8,6 +8,9 @@ from mysql.connector import Error
 from app_receieves import receieves
 from app_csv import csv_apis
 from app_db import db_methods
+
+from IMGlobal import USER_ID
+
 #import database.rank
 
 app = Flask(__name__
@@ -25,7 +28,6 @@ CORS(app)
 #USER_ID = "304u39481-20"
 #USER_ID = "5678"
 #USER_ID = "9840-menqwk"
-USER_ID = "3654"
 #DATASET_ID = 1
 DATASET_ID = 1
 UPLOAD_FOLDER = "../temp"
@@ -38,7 +40,6 @@ tokens = [
 conn = pymysql.connect(host='140.136.155.121', port=50306,
                     user='root', passwd='IM39project')
 cursor = conn.cursor()
-
 
 
 @app.route("/")
@@ -134,6 +135,16 @@ def sna_graph_f_p_f(folder, paths, filenames):
     except:
         return "File not exist"
 
+@app.route("/user",methods=['POST'])
+def user():
+    userToken = request.form.get('token', False)
+    sql = f"SELECT * FROM trans.user WHERE id = {userToken}"
+    print(sql)
+    cursor.execute(sql)
+    conn.commit()
+    users = cursor.fetchone()
+    return jsonify(users)
+
 @app.route("/auth", methods=['POST'])
 def auth():
     global USER_ID
@@ -159,10 +170,9 @@ def auth():
     return jsonify(res)
 
 
-
 @app.route("/token")
 def token():
-    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?CDFC380F8E1D911410EC7EF63BE355C2EDAE"
+    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?B41D358D52B4FDB36CBF8367D3D3E91D66DA"
     return "<a href='"+link+"'>"+link+"</a>"
 
 @app.route("/exampleTable")
@@ -188,6 +198,7 @@ def exampleTable():
                 "datasetEnd",
                 "datasetNote",
                 "datasetPublic",
+                "datasetAddDate"
             ]
             exampleTableData = {}
             for i in range(len(exampleTablesTags)):
@@ -211,16 +222,18 @@ def customizeTable():
     customizeDataset = []
     for customizeData in customizeDatas:
         customizeTableTags = [
+            "datasetID",
             "datasetName",
             "datasetUnit",
             "datasetStart",
             "datasetEnd",
             "datasetNote",
             "datasetPublic",
+            "datasetAddDate"
         ]
         customizeTableDatas = {}
         for i in range(len(customizeTableTags)):
-            customizeTableDatas[customizeTableTags[i]]= customizeData[i+1]
+            customizeTableDatas[customizeTableTags[i]]= customizeData[i]
         customizeDataset.append(customizeTableDatas)
 
     return jsonify(customizeDataset)

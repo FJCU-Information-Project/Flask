@@ -4,14 +4,24 @@ import threading
 from werkzeug.utils import secure_filename
 import os
 import threading
+import mysql.connector as conn
+
+from IMGlobal import USER_ID
 
 db_methods = Blueprint('db_methods', __name__)
 
+connection = conn.connect(
+            host='140.136.155.121',
+            user='root',
+            password='IM39project',
+            port='50306')
 
-CORS(db_methods, resources={"/*": {
+CORS(db_methods, resources={"/.*": {
     "origins": "*",
     "methods": "*",
     "headers": "*",
+    "allow_headers": "*",
+    "supports_credentials": True,
 }})
 
 # user_id = "304u39481-20"
@@ -24,6 +34,11 @@ DATASET_ID = 1
 ALLOWED_EXTENSIONS = set(['csv'])
 UPLOAD_FOLDER = "../temp"
 
+def getTokenId(r):
+    userToken = r.form.get('token', False)
+    datasetID = r.form.get('dataset', False)
+    return userToken, datasetID
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
@@ -31,6 +46,10 @@ def allowed_file(filename):
 def uploadDatasets():
     allRet = []
     nameLists = ["nodeFileName","attributeFileName","resultFileName","resultAttributeFileName"]
+    
+    userToken, datasetID = getTokenId(request)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
     
     for nameOfUploadFile in nameLists:
         ret = {
@@ -63,10 +82,10 @@ def uploadFile():
             "status" : "No file"
         }
 
-        try:
-            datasetFiles = request.files['caseFile']
-        except:
-            all_ret.append(ret)
+        # try:
+        datasetFiles = request.files['caseFile']
+        # except:
+            # all_ret.append(ret)
 
         if datasetFiles and allowed_file(datasetFiles.filename):
             print("File name:",datasetFiles.filename)
@@ -82,8 +101,25 @@ def uploadFile():
         return jsonify(all_ret)
     return "Not POST"
 
-@db_methods.route("/deleteDataset")
+@db_methods.route("/deleteDataset",methods=['OPTIONS','POST'])
 def deleteDataset():
+    cursor = connection.cursor()
+    userToken, datasetID = getTokenId(request)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+    
+    sqlTable = ["dataset", "attribute", "case", "file", "node", "relationship", "result", "result_attribute", "result_weight", "weight"]
+
+    for i in sqlTable:
+        if i == "dataset":
+            sql = f"delete from `{userToken}`.{i} where id = {datasetID}"
+        else:
+            sql = f"delete from `{userToken}`.{i} where dataset = {datasetID}"
+
+        print(sql)
+        cursor.execute(sql)
+        connection.commit()
+
     return "success"
 
 @db_methods.route("/createTable")
@@ -94,8 +130,12 @@ def createTable():
     except:
         return "ERROR by DB"
 
-@db_methods.route("/addDataset")
+@db_methods.route("/addDataset",methods=['GET','OPTIONS','POST'])
 def addDataset():
+    # userToken, datasetID = getTokenId(request)
+    # if not userToken or not datasetID:
+    #     return jsonify({"Auth":"ERROR"}),401
+
     datasetInfo = ["datasetName", "datasetUnit", "datasetPeriodStart", "datasetPeriodEnd", "datasetNote", "datasetPublic"]
     dataset = {}
     for item in datasetInfo:
@@ -112,7 +152,7 @@ def addDataset():
     print(datasetOfValues)
     ret = insert_dataset_info.main(USER_ID, datasetOfValues)
     print(ret)
-    return ret
+    return jsonify(ret)
 
 @db_methods.route("/insertFile")
 def insertFile():

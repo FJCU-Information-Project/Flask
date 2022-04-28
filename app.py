@@ -7,7 +7,8 @@ from mysql.connector import Error
 
 from app_receieves import receieves
 from app_csv import csv_apis
-from app_db import db_methods
+from app_db import db_methods,getTokenId
+from app_history import history
 
 from IMGlobal import USER_ID
 
@@ -20,9 +21,15 @@ app = Flask(__name__
 app.register_blueprint(receieves)
 app.register_blueprint(csv_apis)
 app.register_blueprint(db_methods)
+app.register_blueprint(history)
 
-# CORS(app, resources={"/*": {"origins": "*"}})
-CORS(app)
+CORS(app, resources={"/.*": {
+    "origins": "*",
+    "methods": "*",
+    "headers": "*",
+    "allow_headers": "*",
+    "supports_credentials": True,
+}})
 
 # Constant----
 #USER_ID = "304u39481-20"
@@ -37,9 +44,9 @@ tokens = [
 ]
 # ------------
 
-conn = pymysql.connect(host='140.136.155.121', port=50306,
+connection = pymysql.connect(host='140.136.155.121', port=50306,
                     user='root', passwd='IM39project')
-cursor = conn.cursor()
+
 
 
 @app.route("/")
@@ -47,10 +54,11 @@ def index():
     name = request.args.get("name")
     return render_template("index.html", name=name)
 
-@app.route("/attributes")
+@app.route("/attributes",methods=['GET','OPTIONS','POST'])
 def attributes():
     sql = "SELECT * FROM `" + USER_ID + "`.`attribute` WHERE dataset = " + str(DATASET_ID)
     print(sql)
+    cursor = connection.cursor()
     cursor.execute(sql)
     attributes = cursor.fetchall()
 
@@ -72,13 +80,14 @@ def attributes():
 
         attributeData.append(attribute)
     # print(nodes)
-    conn.commit()
+    connection.commit()
     # print(jsonify(attributeData))
     return jsonify(attributeData)
 
 
-@app.route("/resultAttributes")
+@app.route("/resultAttributes",methods=['GET','OPTIONS','POST'])
 def resultattributes():
+    cursor = connection.cursor()
     cursor.execute("SELECT * FROM `"+USER_ID+"`.`result_attribute`")
     resultAttributes = cursor.fetchall()
 
@@ -99,12 +108,13 @@ def resultattributes():
 
         resultAttributeData.append(resultAttribute)
     print(resultAttribute)
-    conn.commit()
+    connection.commit()
     print(jsonify(resultAttributeData))
     return jsonify(resultAttributeData)
 
 @app.route("/nodes")
 def nodes():
+    cursor = connection.cursor()
     cursor.execute("select * from `" + USER_ID + "`.`node`")
     row = cursor.fetchall()
 
@@ -115,7 +125,7 @@ def nodes():
         result["node"] = i[1]
         jsonData.append(result)
 
-    conn.commit()
+    connection.commit()
     print(jsonify(jsonData))
     return jsonify(jsonData)
 
@@ -140,28 +150,31 @@ def user():
     userToken = request.form.get('token', False)
     sql = f"SELECT * FROM trans.user WHERE id = {userToken}"
     print(sql)
+    cursor = connection.cursor()
     cursor.execute(sql)
-    conn.commit()
+    connection.commit()
     users = cursor.fetchone()
     return jsonify(users)
 
-@app.route("/auth", methods=['POST'])
+@app.route("/auth", methods=['OPTIONS','POST'])
 def auth():
-    global USER_ID
-    conn.ping(reconnect=True)
-    auth_cursor = conn.cursor()
+    userToken, datasetID = getTokenId(request)
+    if not userToken:
+        return jsonify({"Auth":"ERROR"}),401
+    connection.ping(reconnect=True)
+    auth_cursor = connection.cursor()
     res = {"valid": None}
     data = request.get_json()
-    sql = "select * from `trans`.`user` where id =" + str(data["token"])
+    sql = f"select * from `trans`.`user` where id = {userToken}"
     print(sql)
     auth_cursor.execute(sql)
-    conn.commit()
+    connection.commit()
     user = list(auth_cursor.fetchall())
     print(user)
 
     if user:
         res["valid"] = True
-        USER_ID = data["token"]
+        USER_ID = userToken
     else:
         res["valid"] = False
     # data = request.get_json()
@@ -170,49 +183,58 @@ def auth():
     return jsonify(res)
 
 
-@app.route("/token")
+@app.route("/token", methods=['GET'])
 def token():
-    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?B41D358D52B4FDB36CBF8367D3D3E91D66DA"
+    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?54C94C95140090264DEDDBE3371C8985F587"
     return "<a href='"+link+"'>"+link+"</a>"
 
-@app.route("/exampleTable")
+@app.route("/exampleTable", methods=['GET'])
 def exampleTable():
-    conn.ping(reconnect=True)
-    sql = "select * from `trans`.`user`"
+    connection.ping(reconnect=True)
+    sql = "select * from `trans`.user"
     print(sql)
+    cursor = connection.cursor()
     cursor.execute(sql)
     users = cursor.fetchall()
     
     exampleDatasets = []
     for user in users:
-        sql = "select * from `" + str(user[0]) + "`.`dataset` WHERE is_public = 1"
-        cursor.execute(sql)
-        userDatasets = cursor.fetchall()
-        userDatasets = list(userDatasets)
-        
-        for userDataset in userDatasets:
-            exampleTablesTags = [
-                "datasetName",
-                "datasetUnit",
-                "datasetStart",
-                "datasetEnd",
-                "datasetNote",
-                "datasetPublic",
-                "datasetAddDate"
-            ]
-            exampleTableData = {}
-            for i in range(len(exampleTablesTags)):
-                exampleTableData[exampleTablesTags[i]] = userDataset[i+1]
-            exampleDatasets.append(exampleTableData)
-
-    conn.commit()
+        try:
+            sql = "select * from `" + str(user[0]) + "`.`dataset` WHERE is_public = 1"
+            cursor.execute(sql)
+            userDatasets = cursor.fetchall()
+            userDatasets = list(userDatasets)
+            
+            for userDataset in userDatasets:
+                exampleTablesTags = [
+                    "datasetId",
+                    "datasetName",
+                    "datasetUnit",
+                    "datasetStart",
+                    "datasetEnd",
+                    "datasetNote",
+                    "datasetPublic",
+                    "datasetAddDate"
+                ]
+                exampleTableData = {}
+                for i in range(len(exampleTablesTags)):
+                    exampleTableData[exampleTablesTags[i]] = userDataset[i]
+                exampleTableData['user'] = str(user[0])
+                exampleDatasets.append(exampleTableData)
+        except Exception as e:
+            print(e)
+    connection.commit()
     print("exampleTable")
     return jsonify(exampleDatasets)
 
-@app.route("/customizeTable")
+@app.route("/customizeTable", methods=['OPTIONS','POST'])
 def customizeTable():
-    conn.ping(reconnect=True)
-    sql = "select * from `" + USER_ID + "`.`dataset`"
+    cursor = connection.cursor()
+    userToken, datasetID = getTokenId(request)
+    if not userToken:
+        return jsonify({"Auth":"ERROR"}),401
+    connection.ping(reconnect=True)
+    sql = f"select * from `{userToken}`.`dataset`"
     try:
         cursor.execute(sql)
     except Error:
@@ -243,7 +265,7 @@ if __name__ == "__main__":
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     app.debug = True
     # 正式環境註解上面這行
-    if conn:
+    if connection:
         print("conneted")
     else:
         print("Connect ERROR")

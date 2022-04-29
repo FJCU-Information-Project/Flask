@@ -31,7 +31,7 @@ def historyCreate():
     owner = request.form.get('owner',False)
     if not owner or not datasetID:
         return jsonify({"User":"Empty"}),401
-    timestr = 'Thu Apr 28 2022 00:00:00 GMT+0800 (CST)'
+    timestr = 'Thu Apr 28 2022 00:00:00 GMT+0800 (台灣標準時間)'
     timestr = timestr.split()
     print(timestr)
     now2 = dt.datetime(time.strftime(timestr,"%a %b %d %Y %H:%M:%S GMT+0800 (CST)"))

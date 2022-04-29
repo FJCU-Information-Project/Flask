@@ -1,0 +1,4 @@
+﻿id,name,enname
+1,受傷程度,injury_level
+2,主要傷處,injured_part
+3,車輛撞擊部位,impact_site

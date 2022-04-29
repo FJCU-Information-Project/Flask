@@ -8,6 +8,8 @@ import mysql.connector as conn
 import createDataset.correctProcess.insert_into_dataset as insert_dataset_info
 import createDataset.correctProcess.create_schema as create_db
 import createDataset.correctProcess.basic_tables as basic_tables
+import createDataset.correctProcess.relationship as dorelationship
+import createDataset.correctProcess.weight as weight
 
 from IMGlobal import USER_ID
 
@@ -29,7 +31,7 @@ CORS(db_methods, resources={"/.*": {
 
 # user_id = "304u39481-20"
 # dataset_id = 1
-# threads = []
+threads = []
 
 #USER_ID = "304u39481-20"
 #USER_ID = "9840-menqwk"
@@ -92,8 +94,13 @@ def uploadDatasets():
 
 @db_methods.route("/uploadFile",methods=['OPTIONS','POST'])
 def uploadFile():
-    userToken = "9860"
-    datasetID = 1
+    # userToken = "9860"
+    # datasetID = 1
+    userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+
     cursor = connection.cursor()
     if request.method == 'POST':
         all_ret = []
@@ -106,15 +113,15 @@ def uploadFile():
         datasetFiles = request.files['caseFile']
         # except:
             # all_ret.append(ret)
-        file = []
+        file_lst = []
         if datasetFiles and allowed_file(datasetFiles.filename):
             print("File name:",datasetFiles.filename)
             ret["filename"] = datasetFiles.filename
             datasetFiles.save(os.path.join(UPLOAD_FOLDER,secure_filename(datasetFiles.filename)))
             print("Upload File")
             ret["status"] = "Upload"
-            file.append(datasetFiles.filename)
-            basic_tables.insert_file(connection, cursor, userToken, datasetID, file)
+            file_lst.append(datasetFiles.filename)
+            basic_tables.insert_file(connection, cursor, userToken, datasetID, file_lst)
         else:
             print("No flie and format error")
             ret["status"] = "No file and format error"
@@ -157,18 +164,23 @@ def createTable():
     file = cursor.fetchall()
     print(file)
 
-    for fileData in range(len(file)):
+    #for fileData in range(len(file)):
         #fileData = list(fileData)
-        node = file[0][2]
-        attribute = file[1][2]
-        result = file[2][2]
-        result_attribute = file[3][2]
-        case = file[4][2]
+    node = file[0][2]
+    attribute = file[1][2]
+    result = file[2][2]
+    result_attribute = file[3][2]
+    
+    case = file[4][2]
+    # case以單一的型態傳送
+    
+    # case = [file[4][2]]
+        # case lis    # case以lisfile[4][2]t的型態傳送
     
     print(node, attribute, result, result_attribute, case)
     try:
         basic_tables.main(userToken, datasetID, attribute, node, result_attribute, result, case)
-        return "sucess"
+        return "sucess create table"
     except:
         return "ERROR by DB"
 
@@ -225,22 +237,26 @@ def insertFile():
     #except:
         #return "ERROR by DB"
 
-@db_methods.route("/relationship",methods=['GET','OPTIONS','POST'])
+@db_methods.route("/relationship",methods=['OPTIONS','POST', 'GET'])
 def relationship():
-    threads = []
+    userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
+    if not userToken or not datasetID:
+       return jsonify({"Auth":"ERROR"}),401
+    # userToken = "9860"
+    # datasetID = 1
+    # try:
+    print("Ready to relate relation")
 
-    import createDataset.correctProcess.relationship as relationship
-    try:
-        relationship.main("9860", 2)
-    except:
-        return "error by db"
-    t = threading.Thread(target = relationship.main, args = ["9860", 1])
-    t.start()
-    threads.append(t)
-    
-    return "sucess (wait for thread)" + len(threads)
+    dorelationship.main(userToken, datasetID)
+    #t = threading.Thread(target = relationship.main, args = (userToken, datasetID))
+    #print("Thread create success")
+    #t.start()
+    #threads.append(t)
 
-    return "ERROR by thread"
+    return "sucess (wait for thread)" + str(len(threads))
+    # except:
+    #     return "ERROR by relation"
 
 @db_methods.route("/relationshipStatus",methods=['GET','OPTIONS','POST'])
 def relationsshipStatus():
@@ -248,12 +264,17 @@ def relationsshipStatus():
 
 @db_methods.route("/resultWeight",methods=['GET','OPTIONS','POST'])
 def weight():
+    # userToken = "9860"
+    # datasetID = 1
+    userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
     try:
         #user_id = "304u39481-20"
         #dataset_id = 1
-
         import createDataset.correctProcess.weight as weight
-        weight.main(USER_ID, DATASET_ID)
+        weight.main(userToken, datasetID)
         return "sucess"
     except:
         return "ERROR by DB"

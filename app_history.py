@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS,cross_origin
 from app_db import getTokenId
 import mysql.connector as conn
 import datetime as dt
@@ -31,20 +31,19 @@ def historyCreate():
     owner = request.form.get('owner',False)
     if not owner or not datasetID:
         return jsonify({"User":"Empty"}),401
-    timestr = 'Thu Apr 28 2022 00:00:00 GMT+0800 (台灣標準時間)'
-    timestr = timestr.split()
-    print(timestr)
-    now2 = dt.datetime(time.strftime(timestr,"%a %b %d %Y %H:%M:%S GMT+0800 (CST)"))
-    now = dt.datetime.now()
-    print(now2)
+    
+    # 或是使用 
+    now = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # now = dt.date.today()
+    # print(now2)
     print(now)
     cursor = connection.cursor()
-    sql = f"insert into `trans`.history values ('{userToken}', '{owner}', {datasetID}, '{now}')"
+    sql = f"insert into `trans`.`history` (`id`,`owner`,`dataset`,`view_time`) values ('{userToken}', '{owner}', {datasetID}, '{now}') on duplicate key update `view_time` = '{now}'"
     print(sql)
     cursor.execute(sql)
     connection.commit()
     
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success create history'}),200
 
 @history.route('/historyRead', methods=['OPTIONS','POST'])
 def historyRead():
@@ -53,7 +52,7 @@ def historyRead():
         return jsonify({"Auth":"ERROR"}),401
 
     cursor = connection.cursor()
-    sql = f"select * from `trans`.history where id = '{userToken}'"
+    sql = f"select * from `trans`.`history` where id = '{userToken}'"
     print(sql)
     cursor.execute(sql)
     datas = list(cursor.fetchall())

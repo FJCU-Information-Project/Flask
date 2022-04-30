@@ -137,7 +137,7 @@ def deleteDataset():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
     
-    sqlTable = ["dataset", "attribute", "case", "file", "node", "relationship", "result", "result_attribute", "result_weight", "weight"]
+    sqlTable = ["weight", "result_weight", "relationship", "result", "result_attribute", "case", "node", "attribute", "file", "dataset"]
 
     for i in sqlTable:
         if i == "dataset":
@@ -226,13 +226,19 @@ def addDataset():
 @db_methods.route("/insertCase",methods=['GET','OPTIONS','POST'])
 def insertFile():
     cursor = connection.cursor()
+    uploadFile = request.files['caseFile'].filename
+    print(uploadFile)
     userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
     #user_id = "304u39481-20"
     #dataset_id = 1
     # try:
-    basic_tables.insert_case(cursor, USER_ID, DATASET_ID)
+    basic_tables.insert_case(connection, cursor, userToken, datasetID, uploadFile)
+    dorelationship.main(userToken, datasetID)
+    import createDataset.correctProcess.weight as weight
+    weight.main(userToken, datasetID)
     return "sucess"
     #except:
         #return "ERROR by DB"

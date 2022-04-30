@@ -56,6 +56,11 @@ def index():
 
 @app.route("/attributes",methods=['GET','OPTIONS','POST'])
 def attributes():
+    userToken, datasetID = getTokenId(request)
+    print(type(userToken), type(datasetID))
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+    
     sql = "SELECT * FROM `" + USER_ID + "`.`attribute` WHERE dataset = " + str(DATASET_ID)
     print(sql)
     cursor = connection.cursor()
@@ -87,6 +92,11 @@ def attributes():
 
 @app.route("/resultAttributes",methods=['GET','OPTIONS','POST'])
 def resultattributes():
+    userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+    
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM `"+USER_ID+"`.`result_attribute`")
     resultAttributes = cursor.fetchall()
@@ -112,8 +122,13 @@ def resultattributes():
     print(jsonify(resultAttributeData))
     return jsonify(resultAttributeData)
 
-@app.route("/nodes")
+@app.route("/nodes",methods=['GET','OPTIONS','POST'])
 def nodes():
+    userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
+    if not userToken or not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+    
     cursor = connection.cursor()
     cursor.execute("select * from `" + USER_ID + "`.`node`")
     row = cursor.fetchall()
@@ -165,7 +180,7 @@ def auth():
     auth_cursor = connection.cursor()
     res = {"valid": None}
     data = request.get_json()
-    sql = f"select * from `trans`.`user` where id = {userToken}"
+    sql = f"select * from `trans`.`user` where id = '{userToken}'"
     print(sql)
     auth_cursor.execute(sql)
     connection.commit()
@@ -257,7 +272,7 @@ def customizeTable():
         for i in range(len(customizeTableTags)):
             customizeTableDatas[customizeTableTags[i]]= customizeData[i]
         customizeDataset.append(customizeTableDatas)
-
+        print(customizeDataset)
     return jsonify(customizeDataset)
 
 if __name__ == "__main__":

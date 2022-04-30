@@ -9,7 +9,7 @@ csv_apis = Blueprint('csv_apis', __name__)
 
 @csv_apis.route("/factorRankcsv",methods=['GET','OPTIONS','POST'])
 def factorcsv():
-    csv = pd.read_csv("rankTable.csv")
+    csv = pd.read_csv("rank_table.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))
@@ -33,7 +33,7 @@ def closenesscsv():
 
 @csv_apis.route("/layercsv",methods=['GET','OPTIONS','POST'])
 def layercsv():
-    csv = pd.read_csv("layertable.csv")
+    csv = pd.read_csv("layerHtmlTable.csv")
     print(csv)
     jdata = csv.to_json(orient="records")
     return jsonify(json.loads(jdata))

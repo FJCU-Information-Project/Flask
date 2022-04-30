@@ -5,7 +5,7 @@ from app_db import db_methods,getTokenId
 receieves = Blueprint('receieves', __name__)
 
 # Define Rscipt Path
-Rscript = "E:\\R-4.1.2\\bin\\Rscript.exe "
+Rscript = "E:\\R-4.1.2\\bin\\x64\\Rscript.exe "
 #Rscript = "Rscript "
 #Rscript = "/usr/local/bin/Rscript "
 snaPath = ".." + os.sep + "sna" + os.sep
@@ -63,6 +63,7 @@ def degreereceive():
 @receieves.route("/overallReceive",methods=['GET','OPTIONS','POST'])
 def overallreceive():
     userToken, datasetID = getTokenId(request)
+    print(userToken, datasetID)
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
         
@@ -70,7 +71,7 @@ def overallreceive():
     command = Rscript + snaPath + "sna_all.R " + " " + userToken + " " + datasetID
     res = os.system(command)
     print(res)
-    return redirect('sna_graph/overall.html')
+    return redirect('sna_graph/all.html')
 
 
 @receieves.route("/factorRankReceive",methods=['GET','OPTIONS','POST'])
@@ -113,11 +114,11 @@ def resultreceive():
     userToken, datasetID = getTokenId(request)
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
-
+    print(userToken,datasetID)
+    
     node = request.args.get("node")
-    rank = request.args.get("rank")
     # TOCHECK: rank在 rscript裡面沒有對應的參數
-    command = Rscript + snaPath + "sna_result.R " + node + " " + rank  + " " + userToken + " " + datasetID
+    command = Rscript + snaPath + "sna_result.R " + node + " " + userToken + " " + datasetID
     res = os.system(command)
     print(res)
     print(node)
@@ -129,13 +130,14 @@ def basicreceive():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
 
-    node = request.args.get("node")
+    node = request.form.get("node", " ")
+    print("Basic Receive :", node)
     # TOCHECK: rank在 rscript裡面沒有對應的參數
-    command = Rscript + snaPath + "sna_basic.R " + node + " " + userToken + " " + datasetID
+    command = Rscript + snaPath + "sna_basic.R " + userToken + " " + datasetID + " " + node 
     res = os.system(command)
     print(res)
     print(node)
-    return redirect('sna_graph/result.html')
+    return redirect('sna_graph/basic.html')
 
 @receieves.route("/isolationReceive",methods=['GET','OPTIONS','POST'])
 def isolationreceive():

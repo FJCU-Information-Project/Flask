@@ -10,6 +10,10 @@ from app_csv import csv_apis
 from app_db import db_methods,getTokenId
 from app_history import history
 
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+
 from IMGlobal import USER_ID
 
 #import database.rank
@@ -61,7 +65,7 @@ def attributes():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
     
-    sql = "SELECT * FROM `" + USER_ID + "`.`attribute` WHERE dataset = " + str(DATASET_ID)
+    sql = "SELECT * FROM `" + userToken + "`.`attribute` WHERE dataset = " + datasetID
     print(sql)
     cursor = connection.cursor()
     cursor.execute(sql)
@@ -72,7 +76,7 @@ def attributes():
         attribute = {}
         attribute["value"] = i[1]
         attribute["label"] = i[2]
-        sql = "select * from `" + USER_ID + "`.`node` where attribute = " + str(i[1])
+        sql = "select * from `" + userToken + "`.`node` where attribute = " + str(i[1]) + " and dataset = " + datasetID
         print(sql)
         cursor.execute(sql)
         nodes = cursor.fetchall()
@@ -98,9 +102,9 @@ def resultattributes():
         return jsonify({"Auth":"ERROR"}),401
     
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM `"+USER_ID+"`.`result_attribute`")
+    cursor.execute("SELECT * FROM `"+userToken+"`.`result_attribute` WHERE dataset = " + datasetID)
     resultAttributes = cursor.fetchall()
-
+    print(resultAttributes)
     resultAttributeData = []
     for i in resultAttributes:
         resultAttribute = {}
@@ -130,7 +134,7 @@ def nodes():
         return jsonify({"Auth":"ERROR"}),401
     
     cursor = connection.cursor()
-    cursor.execute("select * from `" + USER_ID + "`.`node`")
+    cursor.execute("select * from `" + userToken + "`.`node` where dataset = " + datasetID)
     row = cursor.fetchall()
 
     jsonData = []
@@ -200,7 +204,7 @@ def auth():
 
 @app.route("/token", methods=['GET'])
 def token():
-    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?7372B95A9A4B426446CA327FC3E74A34E78F"
+    link = "https://prod.liveshare.vsengsaas.visualstudio.com/join?EE6C2432A59992C9C63777D1DF75262FA183"
     return "<a href='"+link+"'>"+link+"</a>"
 
 @app.route("/exampleTable", methods=['GET'])
@@ -228,8 +232,8 @@ def exampleTable():
                     "datasetStart",
                     "datasetEnd",
                     "datasetNote",
-                    "datasetPublic",
-                    "datasetAddDate"
+                    "datasetAddDate",
+                    "datasetPublic"
                 ]
                 exampleTableData = {}
                 for i in range(len(exampleTablesTags)):
@@ -238,6 +242,7 @@ def exampleTable():
                 exampleDatasets.append(exampleTableData)
         except Exception as e:
             print(e)
+            print("But still good~")
     connection.commit()
     print("exampleTable")
     return jsonify(exampleDatasets)
@@ -265,8 +270,8 @@ def customizeTable():
             "datasetStart",
             "datasetEnd",
             "datasetNote",
-            "datasetPublic",
-            "datasetAddDate"
+            "datasetAddDate",
+            "datasetPublic"
         ]
         customizeTableDatas = {}
         for i in range(len(customizeTableTags)):
@@ -275,6 +280,41 @@ def customizeTable():
         print(customizeDataset)
     return jsonify(customizeDataset)
 
+@app.route("/sendMail")
+def sendMail():
+    userToken, datasetID = getTokenId(request)
+    if not userToken and not datasetID:
+        return jsonify({"Auth":"ERROR"}),401
+    
+    import smtplib
+
+    gmail_user = 'subjecttrans@gmail.com'
+    gmail_password = 'im39project'
+
+    sent_from = gmail_user
+    to = ['joannechen912@gmail.com']
+    subject = 'Lorem ipsum dolor sit amet'
+    body = 'consectetur adipiscing elit'
+
+    email_text = """\
+    From: %s
+    To: %s
+    Subject: %s
+
+    %s
+    """ % (sent_from, ", ".join(to), subject, body)
+
+    try:
+        smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        smtp_server.ehlo()
+        smtp_server.login(gmail_user, gmail_password)
+        smtp_server.sendmail(sent_from, to, email_text)
+        smtp_server.close()
+        print ("Email sent successfully!")
+    except Exception as ex:
+        print ("Something went wrong….",ex)
+
+    
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER

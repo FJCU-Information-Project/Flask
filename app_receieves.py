@@ -80,8 +80,8 @@ def factorreceive():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
 
-    node = request.args.get("node")
-    command = Rscript + snaPath + "snaRank10.R " + node  + " " + userToken + " " + datasetID
+    node = request.form.get("node")
+    command = Rscript + snaPath + "snaRank10.R " + node + " " + userToken + " " + datasetID
     res = os.system(command)
     print(res)
     print(node)
@@ -94,13 +94,13 @@ def layerreceive():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
 
-    node = request.args.get("node")
+    node = request.form.get("node")
     print("Layer Receive :", node)
     
     # PROBLEM 參數現在是直接寫死的
-    csv_command = " python " + snaPath + "layer.py " + str(node)
+    csv_command = " python " + snaPath + "layer.py " + node + " " + userToken + " " + datasetID
     print("csv_command:",csv_command)
-    graph_command = Rscript + snaPath + "sna_layer.R " + str(node)
+    graph_command = Rscript + snaPath + "sna_layer.R " + userToken + " " + datasetID
     print("graph_command:",graph_command)
     csv_res = os.system(csv_command)
     print("csv_res:",csv_res)

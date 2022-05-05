@@ -48,6 +48,7 @@ def historyCreate():
 @history.route('/historyRead', methods=['OPTIONS','POST'])
 def historyRead():
     userToken = request.form.get('token',False)
+    print(userToken)
     if not userToken:
         return jsonify({"Auth":"ERROR"}),401
 

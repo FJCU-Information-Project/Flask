@@ -48,9 +48,9 @@ def relationship(cursor, user_id, dataset_id):
     id_string = ''
     for i in range(len(pass_id_lst)):
         if i != len(pass_id_lst)-1:
-            id_string += str(pass_id_lst[i][0]) + ', ' 
+            id_string += '(' + str(pass_id_lst[i][0]) + '), ' 
         else:
-            id_string += str(pass_id_lst[i][0])
+            id_string += '(' + str(pass_id_lst[i][0]) + ') ' 
     SQL_case = "SELECT `id`, "+attr_string+" FROM `%s`.`case` WHERE `dataset` = %s AND `id` IN ("%(user_id, dataset_id)+id_string+")"
     print(SQL_case)
     cursor.execute(SQL_case)

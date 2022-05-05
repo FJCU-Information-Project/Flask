@@ -1,8 +1,10 @@
+
 from flask import Flask, render_template, request, jsonify, Blueprint
 from flask_cors import CORS, cross_origin
 from email.policy import HTTP
 from werkzeug.utils import secure_filename
 import pymysql
+import datetime
 from mysql.connector import Error
 
 from app_receieves import receieves
@@ -313,7 +315,24 @@ def sendMail():
         print ("Email sent successfully!")
     except Exception as ex:
         print ("Something went wrong….",ex)
+        
+@app.route("/contact", methods=['OPTIONS','POST'])
+def contact():
+    cursor = connection.cursor()
+    email = request.form.get('email', False)
+    name = request.form.get('name', False)
+    topic = request.form.get('topic', False)
+    messege = request.form.get('messege', 'NULL')
+    if not email or not name or not topic:
+        return jsonify({"status":"Data not complete"}),401
 
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sql = f"INSERT INTO `trans`.`contact_info` (name, email, topic, message, datetime) values ('{name}','{email}','{topic}','{messege}','{now}')"
+    print(sql)
+    cursor.execute(sql)
+    connection.commit()
+
+    return jsonify({"status":"success"})
     
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False

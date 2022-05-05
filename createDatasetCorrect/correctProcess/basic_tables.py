@@ -266,6 +266,7 @@ def create_other_table(cursor, user_id):
         cursor.execute(add)
     print("Successfully alter case factor") #確認執行至此
     
+    
     get_result_attribute = f"SELECT `enname` FROM `{user_id}`.`result_attribute`"
     cursor.execute(get_result_attribute)
     result_attribute = cursor.fetchall()
@@ -359,7 +360,7 @@ def insert_case(cursor, user_id, dataset_id, file_lst):
     # for file in file_lst:
         df = pd.read_csv('../temp/%s'%(file_lst))
         df = df.astype(object).where(pd.notnull(df), None) #處理空值
-        max_id = f"select max(`id`) from `{user_id}`.`case` where dataset = {dataset_id}"
+        max_id = f"select max(`id`) from `{user_id}`.`case` where `dataset` = {dataset_id}"
         #找最後一個id
 
         #max_id = "SELECT MAX(`id`) FROM `" + user_id + "`.`case` WHERE `dataset` = '" + dataset_id + "'"
@@ -373,13 +374,13 @@ def insert_case(cursor, user_id, dataset_id, file_lst):
 
         #計算result_attribute
         SQL = f"select count(`id`) from `{user_id}`.`result_attribute` where dataset = {dataset_id}"
-        # SQL = "SELECT COUNT(`id`) FROM `%s`.`result_attribute` WHERE `dataset` = %s"%(user_id, dataset_id)
+        # SQL = "SELECT COUNT(`id`) FROM `%s`.`result_attribute` WHERE `dataset` = '%s'"%(user_id, dataset_id)
         print(SQL)
         cursor.execute(SQL)
         count = cursor.fetchall()[0][0]
         
         #node新舊id對照的串列(new_id, original_id, attribute)
-        SQL = f"select `id`, `original_id`, `attribute` from `{user_id}`.`node` where dataset = {dataset_id}"
+        SQL = f"select `id`, `original_id`, `attribute` from `{user_id}`.`node` where `dataset` = {dataset_id}"
         # SQL_ids = "SELECT `id`, `original_id`, `attribute` FROM `%s`.`node` WHERE `dataset` = %s"%(user_id, dataset_id)
         print(SQL)
         cursor.execute(SQL)
@@ -389,7 +390,7 @@ def insert_case(cursor, user_id, dataset_id, file_lst):
             id_dic.append(ids_lst[i])
         
         #result新舊id對照的串列(new_id, original_id, attribute)
-        SQL = f"select `id`, `original_id`, `attribute` from `{user_id}`.`result` where dataset = {dataset_id}"
+        SQL = f"select `id`, `original_id`, `attribute` from `{user_id}`.`result` where `dataset` = {dataset_id}"
         # SQL_ids = "SELECT `id`, `original_id`, `attribute` FROM `%s`.`result` WHERE `dataset` = %s"%(user_id, dataset_id)
         print(SQL)
         cursor.execute(SQL)
@@ -399,7 +400,7 @@ def insert_case(cursor, user_id, dataset_id, file_lst):
             result_id_dic.append(result_ids_lst[i])
     
         #看case有幾個欄位，建立SQL語法
-        SQL = f"select COUNT(*) FROM information_schema.COLUMNS WHERE table_schema= {user_id} AND table_name='case'"
+        SQL = f"select COUNT(*) FROM information_schema.COLUMNS WHERE table_schema = '{user_id}' AND table_name = 'case'"
         # SQL = "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE table_schema= '%s' AND table_name='case'"%(user_id)
         print(SQL)
         cursor.execute(SQL)
@@ -465,7 +466,7 @@ def main(user_id, dataset_id, attribute, node, result_attribute, result, file):
             create_other_table(cursor, user_id)
             # insert_file(connection, cursor, user_id, dataset_id, file)
             insert_case(cursor, user_id, dataset_id, file)
-    
+        
         else:
             insert_into_tables(cursor, user_id, dataset_id, attribute, node, result_attribute, result)
             connection.commit()

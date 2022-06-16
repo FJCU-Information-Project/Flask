@@ -6,6 +6,12 @@ from app_db import db_methods,getTokenId
 
 csv_apis = Blueprint('csv_apis', __name__)
 
+@csv_apis.route("/allcsv",methods=['GET','OPTIONS','POST'])
+def allcsv():
+    csv = pd.read_csv("all_table.csv")
+    print(csv)
+    jdata = csv.to_json(orient="records")
+    return jsonify(json.loads(jdata))
 
 @csv_apis.route("/factorRankcsv",methods=['GET','OPTIONS','POST'])
 def factorcsv():

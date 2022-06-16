@@ -67,10 +67,12 @@ def overallreceive():
     if not userToken or not datasetID:
         return jsonify({"Auth":"ERROR"}),401
         
-    
-    command = Rscript + snaPath + "sna_all.R " + " " + userToken + " " + datasetID
+    # 前多少百分比的資料
+    ratio = request.form.get("ratio")
+    print(ratio)
+    command = f"{Rscript} {snaPath}sna_all.R {userToken} {datasetID} {ratio}"
     res = os.system(command)
-    print(res)
+    print(f"Rscript運行結果{res}")
     return redirect('sna_graph/all.html')
 
 
@@ -134,8 +136,9 @@ def basicreceive():
     print("Basic Receive :", node)
     # TOCHECK: rank在 rscript裡面沒有對應的參數
     command = Rscript + snaPath + "sna_basic.R " + userToken + " " + datasetID + " " + node 
+    print("執行命令",command)
     res = os.system(command)
-    print(res)
+    print("執行結果",res)
     print(node)
     return redirect('sna_graph/basic.html')
 

@@ -237,7 +237,7 @@ def insertFile():
     # try:
     basic_tables.insert_case(connection, cursor, userToken, datasetID, uploadFile)
     dorelationship.main(userToken, datasetID)
-    import createDataset.correctProcess.weight as weight
+
     weight.main(userToken, datasetID)
     return "sucess"
     #except:
@@ -248,7 +248,7 @@ def relationship():
     userToken, datasetID = getTokenId(request)
     print(userToken, datasetID)
     if not userToken or not datasetID:
-       return jsonify({"Auth":"ERROR"}),401
+        return jsonify({"Auth":"ERROR"}),401
     # userToken = "9860"
     # datasetID = 1
     # try:
@@ -265,11 +265,12 @@ def relationship():
     #     return "ERROR by relation"
 
 @db_methods.route("/relationshipStatus",methods=['GET','OPTIONS','POST'])
-def relationsshipStatus():
-    return 0
+def relationshipStatus():
+    progress = dorelationship.STATUS
+    return jsonify({"progress":progress})
 
 @db_methods.route("/resultWeight",methods=['GET','OPTIONS','POST'])
-def weight():
+def resultWeight():
     # userToken = "9860"
     # datasetID = 1
     userToken, datasetID = getTokenId(request)
@@ -279,8 +280,12 @@ def weight():
     try:
         #user_id = "304u39481-20"
         #dataset_id = 1
-        import createDataset.correctProcess.weight as weight
         weight.main(userToken, datasetID)
         return "sucess"
     except:
         return "ERROR by DB"
+
+@db_methods.route("/weightStatus",methods=['GET','OPTIONS','POST'])
+def relationsshipStatus():
+    progress = weight.STATUS
+    return jsonify({"progress":progress})

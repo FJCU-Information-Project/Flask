@@ -42,6 +42,7 @@ def historyCreate():
     print(sql)
     cursor.execute(sql)
     connection.commit()
+    cursor.close()
     
     return jsonify({'status': 'success create history'}),200
 
